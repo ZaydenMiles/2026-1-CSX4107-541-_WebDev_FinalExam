@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .env*
+
+# allow the env templates
+!.env.example
