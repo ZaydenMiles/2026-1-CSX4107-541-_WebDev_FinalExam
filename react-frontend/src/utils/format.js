@@ -1,7 +1,9 @@
 //src/utils/format.js
 
 export function formatPrice(price) {
-  return Number(price).toLocaleString(undefined, {
+  const value = Number(price);
+  if (value === 0) return "Free";
+  return value.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

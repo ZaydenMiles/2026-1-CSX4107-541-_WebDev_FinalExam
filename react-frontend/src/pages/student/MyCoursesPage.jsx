@@ -1,10 +1,14 @@
 //src/pages/student/MyCoursesPage.jsx
 
-import { Alert, Button, Paper, Typography } from "@mui/material";
+import ExploreIcon from "@mui/icons-material/Explore";
+import SchoolIcon from "@mui/icons-material/School";
+import { Alert, Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import CourseCard from "../../components/CourseCard.jsx";
+import EmptyState from "../../components/EmptyState.jsx";
 import LoadingBlock from "../../components/LoadingBlock.jsx";
+import PageHeader from "../../components/PageHeader.jsx";
 import { useUser } from "../../context/useUser.js";
 
 // Courses the logged-in Student is enrolled in
@@ -32,29 +36,35 @@ export default function MyCoursesPage() {
   }, [apiFetch]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <Typography variant="h4" component="h1">
-          My Enrollments
-        </Typography>
-        <Typography color="text.secondary">Courses you are enrolled in</Typography>
-      </div>
+    <div className="flex flex-col">
+      <PageHeader
+        eyebrow="My learning"
+        title="My Enrollments"
+        subtitle="Courses you are enrolled in"
+        actions={
+          <Button component={RouterLink} to="/courses" variant="outlined" startIcon={<ExploreIcon />}>
+            Browse Courses
+          </Button>
+        }
+      />
 
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
       {isLoading ? (
         <LoadingBlock />
       ) : courses.length === 0 ? (
-        <Paper variant="outlined" sx={{ p: 6, textAlign: "center" }}>
-          <Typography color="text.secondary" sx={{ mb: 2 }}>
-            You have not enrolled in any course yet.
-          </Typography>
-          <Button component={RouterLink} to="/courses" variant="contained">
-            Browse Courses
-          </Button>
-        </Paper>
+        <EmptyState
+          icon={SchoolIcon}
+          title="You have not enrolled in any course yet"
+          text="Find a course you like and enroll while seats are open."
+          action={
+            <Button component={RouterLink} to="/courses" variant="contained">
+              Browse Courses
+            </Button>
+          }
+        />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((course) => (
             <CourseCard key={course.id} course={course} />
           ))}

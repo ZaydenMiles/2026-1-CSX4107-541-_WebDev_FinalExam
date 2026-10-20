@@ -1,18 +1,22 @@
 //src/pages/teacher/CourseFormPage.jsx
 
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {
   Alert,
   Button,
   Card,
   CardContent,
   Chip,
+  Divider,
   MenuItem,
   TextField,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import CourseCard from "../../components/CourseCard.jsx";
 import LoadingBlock from "../../components/LoadingBlock.jsx";
+import PageHeader from "../../components/PageHeader.jsx";
 import { useUser } from "../../context/useUser.js";
 import { COURSE_STATUSES, STATUS_OPEN } from "../../utils/constants.js";
 
@@ -36,11 +40,25 @@ function toNumberOrBlank(value) {
   return value === "" ? "" : Number(value);
 }
 
+function FormSection({ title, description, children }) {
+  return (
+    <section>
+      <Typography variant="subtitle1" component="h2" sx={{ fontWeight: 700 }}>
+        {title}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        {description}
+      </Typography>
+      {children}
+    </section>
+  );
+}
+
 // Create a new course, or edit an existing one when the route has a courseId
 export default function CourseFormPage() {
   const { courseId } = useParams();
   const isEdit = Boolean(courseId);
-  const { apiFetch } = useUser();
+  const { user, apiFetch } = useUser();
   const navigate = useNavigate();
 
   const [form, setForm] = useState(EMPTY_FORM);
@@ -144,106 +162,153 @@ export default function CourseFormPage() {
     return <LoadingBlock />;
   }
 
+  const backLink = isEdit ? `/teacher/courses/${courseId}` : "/teacher/courses";
+  const maxStudent = Number(form.maxStudent) || 0;
+  const previewCourse = {
+    courseName: form.courseName.trim() || "Untitled course",
+    topics: withTypedTopics(form.topics),
+    duration: Number(form.duration) || 0,
+    price: Number(form.price) || 0,
+    maxStudent: maxStudent,
+    enrolledCount: enrolledCount,
+    seatsLeft: Math.max(maxStudent - enrolledCount, 0),
+    status: form.status,
+    teacher: { name: user.name },
+    isEnrolled: false,
+  };
+
   return (
-    <Card variant="outlined" sx={{ maxWidth: 760, mx: "auto" }}>
-      <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
-        <Typography variant="h5" component="h1" sx={{ mb: 3 }}>
-          {isEdit ? "Edit Course" : "New Course"}
-        </Typography>
+    <>
+      <PageHeader
+        eyebrow={isEdit ? "Edit course" : "Create course"}
+        title={isEdit ? "Edit Course" : "New Course"}
+        subtitle={
+          isEdit
+            ? "Update the details Students see for this course."
+            : "Fill in the details and Students can enroll once the course is Open."
+        }
+        actions={
+          <Button component={RouterLink} to={backLink} startIcon={<ArrowBackIcon />}>
+            Back
+          </Button>
+        }
+      />
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {error && <Alert severity="error">{error}</Alert>}
+      <form onSubmit={handleSubmit} className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <Card>
+          <CardContent sx={{ display: "flex", flexDirection: "column", gap: 3, p: { xs: 2.5, sm: 4 } }}>
+            {error && <Alert severity="error">{error}</Alert>}
 
-          <TextField
-            label="Course Name"
-            value={form.courseName}
-            onChange={updateField("courseName")}
-            required
-            fullWidth
-          />
+            <FormSection title="Course details" description="The name and visibility of the course.">
+              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_200px]">
+                <TextField
+                  label="Course Name"
+                  value={form.courseName}
+                  onChange={updateField("courseName")}
+                  required
+                  fullWidth
+                />
+                <TextField
+                  select
+                  label="Status"
+                  value={form.status}
+                  onChange={updateField("status")}
+                  helperText={STATUS_HELP[form.status]}
+                >
+                  {COURSE_STATUSES.map((status) => (
+                    <MenuItem key={status} value={status}>
+                      {status}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </div>
+            </FormSection>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <TextField
-              label="Duration (days)"
-              type="number"
-              value={form.duration}
-              onChange={updateField("duration")}
-              slotProps={{ htmlInput: { min: 1, step: 1 } }}
-              required
-            />
-            <TextField
-              label="Price"
-              type="number"
-              value={form.price}
-              onChange={updateField("price")}
-              slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
-              required
-            />
-            <TextField
-              label="Max Student"
-              type="number"
-              value={form.maxStudent}
-              onChange={updateField("maxStudent")}
-              slotProps={{ htmlInput: { min: Math.max(1, enrolledCount), step: 1 } }}
-              helperText={isEdit ? `${enrolledCount} students enrolled now` : " "}
-              required
-            />
-            <TextField
-              select
-              label="Status"
-              value={form.status}
-              onChange={updateField("status")}
-              helperText={STATUS_HELP[form.status]}
-            >
-              {COURSE_STATUSES.map((status) => (
-                <MenuItem key={status} value={status}>
-                  {status}
-                </MenuItem>
-              ))}
-            </TextField>
-          </div>
+            <Divider />
 
-          <div>
-            <div className="flex gap-2">
-              <TextField
-                label="Add a topic"
-                value={topicInput}
-                onChange={(event) => setTopicInput(event.target.value)}
-                onKeyDown={handleTopicKeyDown}
-                helperText="Press Enter or comma to add each topic"
-                fullWidth
-              />
-              <Button variant="outlined" onClick={addTopic} sx={{ alignSelf: "flex-start", height: 56 }}>
-                Add
+            <FormSection title="Schedule and pricing" description="How long the course runs, its price and how many Students can join.">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <TextField
+                  label="Duration (days)"
+                  type="number"
+                  value={form.duration}
+                  onChange={updateField("duration")}
+                  slotProps={{ htmlInput: { min: 1, step: 1 } }}
+                  required
+                />
+                <TextField
+                  label="Price"
+                  type="number"
+                  value={form.price}
+                  onChange={updateField("price")}
+                  slotProps={{ htmlInput: { min: 0, step: "0.01" } }}
+                  helperText="0 makes the course free"
+                  required
+                />
+                <TextField
+                  label="Max Student"
+                  type="number"
+                  value={form.maxStudent}
+                  onChange={updateField("maxStudent")}
+                  slotProps={{ htmlInput: { min: Math.max(1, enrolledCount), step: 1 } }}
+                  helperText={isEdit ? `${enrolledCount} students enrolled now` : " "}
+                  required
+                />
+              </div>
+            </FormSection>
+
+            <Divider />
+
+            <FormSection title="Topics" description="What Students will learn. Add as many topics as you need.">
+              <div className="flex gap-2">
+                <TextField
+                  label="Add a topic"
+                  value={topicInput}
+                  onChange={(event) => setTopicInput(event.target.value)}
+                  onKeyDown={handleTopicKeyDown}
+                  helperText="Press Enter or comma to add each topic"
+                  fullWidth
+                />
+                <Button variant="outlined" onClick={addTopic} sx={{ alignSelf: "flex-start", height: 56 }}>
+                  Add
+                </Button>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {form.topics.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No topics yet
+                  </Typography>
+                ) : (
+                  form.topics.map((topic) => (
+                    <Chip key={topic} label={topic} color="primary" variant="outlined" onDelete={() => removeTopic(topic)} />
+                  ))
+                )}
+              </div>
+            </FormSection>
+
+            <Divider />
+
+            <div className="flex justify-end gap-2">
+              <Button component={RouterLink} to={backLink} disabled={isSaving}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="contained" size="large" disabled={isSaving}>
+                {isSaving ? "Saving..." : isEdit ? "Save Changes" : "Create Course"}
               </Button>
             </div>
-            <div className="mt-2 flex flex-wrap gap-1">
-              {form.topics.length === 0 ? (
-                <Typography variant="body2" color="text.secondary">
-                  No topics yet
-                </Typography>
-              ) : (
-                form.topics.map((topic) => (
-                  <Chip key={topic} label={topic} onDelete={() => removeTopic(topic)} />
-                ))
-              )}
-            </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          <div className="mt-2 flex justify-end gap-2">
-            <Button
-              component={RouterLink}
-              to={isEdit ? `/teacher/courses/${courseId}` : "/teacher/courses"}
-              disabled={isSaving}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained" disabled={isSaving}>
-              {isSaving ? "Saving..." : isEdit ? "Save Changes" : "Create Course"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+        <aside className="flex flex-col gap-3 lg:sticky lg:top-24">
+          <Typography variant="overline" color="text.secondary">
+            Live preview
+          </Typography>
+          <CourseCard course={previewCourse} linkTo={null} />
+          <Typography variant="caption" color="text.secondary">
+            This is how the course appears to Students.
+          </Typography>
+        </aside>
+      </form>
+    </>
   );
 }

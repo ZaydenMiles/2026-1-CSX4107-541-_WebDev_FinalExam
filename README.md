@@ -7,11 +7,13 @@
 
 ## Deployed Application
 
-| Part                | URL                         |
-| ------------------- | --------------------------- |
-| Frontend (React)    | _To be added after deploy_  |
-| Backend (Next.js)   | _To be added after deploy_  |
-| Source code         | _To be added after pushing_ |
+| Part              | URL                                                                                     |
+| ----------------- | --------------------------------------------------------------------------------------- |
+| Frontend (React)  | https://csx4107-coursefinalexam-frontend.vercel.app                                     |
+| Backend (Next.js) | https://csx4107-coursefinalexam-backend.vercel.app                                      |
+| Source code       | https://github.com/ZaydenMiles/2026-1-CSX4107-541-_WebDev_FinalExam                      |
+| Backend source    | https://github.com/ZaydenMiles/2026-1-CSX4107-541-_WebDev_FinalExam/tree/main/next-backend   |
+| Frontend source   | https://github.com/ZaydenMiles/2026-1-CSX4107-541-_WebDev_FinalExam/tree/main/react-frontend |
 
 The deployed app uses the same test credentials below. See [Deployment](#deployment-vercel) for how it is set up.
 
@@ -93,7 +95,7 @@ Open http://localhost:5173.
 
 #### Teacher functions (log in as `teacher1`)
 
-Open http://localhost:5173 and sign in with `teacher1` / `password123`. Any page you open without logging in redirects here.
+Open http://localhost:5173 and sign in with `teacher1` / `password123`. Any page you open without logging in redirects here. The **Teacher demo** and **Student demo** buttons fill in a test account for you.
 
 ![Login page](docs/screenshots/01-login.png)
 
